@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>壹所寓研空間設計 — 工程報價系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --paper:#fafaf7;
+    --line:#d8d4c8;
+    --muted:#7a7568;
+    --accent:#8b3a2a;
+    --accent-soft:#f3ebe4;
+    --hover:#f1ede2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:'Noto Sans TC',-apple-system,sans-serif;font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:'Noto Serif TC',serif;font-weight:700;letter-spacing:.02em}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+
+  .topbar{position:sticky;top:0;background:var(--paper);border-bottom:2px solid var(--ink);padding:14px 28px;display:flex;align-items:center;gap:24px;z-index:50}
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand .logo{font-family:'Noto Serif TC',serif;font-weight:900;font-size:22px;letter-spacing:.06em}
+  .brand .logo-sub{font-size:11px;letter-spacing:.4em;color:var(--muted);text-transform:uppercase}
+  .topbar nav{margin-left:auto;display:flex;gap:4px;align-items:center}
+  .topbar nav button{background:none;border:1px solid transparent;padding:8px 16px;font-family:inherit;font-size:13px;cursor:pointer;color:var(--ink);letter-spacing:.05em}
+  .topbar nav button:hover{background:var(--hover)}
+  .topbar nav button.active{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+  .conn-status{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-right:12px}
+  .conn-status.ok::before{content:'●';color:#2d6a4f;margin-right:4px}
+  .conn-status.err::before{content:'●';color:var(--accent);margin-right:4px}
+  .conn-status.loading::before{content:'●';color:var(--muted);margin-right:4px;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.3}}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:32px 28px 100px}
+
+  .list-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:16px}
+  .list-header h1{font-size:28px}
+  .list-header .meta{color:var(--muted);font-size:13px}
+  .search-bar{display:flex;gap:8px;margin-bottom:24px}
+  .search-bar input{flex:1;padding:12px 16px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:14px}
+  .search-bar input:focus{outline:none;border-color:var(--ink)}
+  .btn{padding:10px 20px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-family:inherit;font-size:13px;cursor:pointer;letter-spacing:.05em;transition:all .15s}
+  .btn:hover{background:transparent;color:var(--ink)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper)}
+  .btn.small{padding:6px 12px;font-size:12px}
+  .btn.danger{border-color:var(--accent);background:var(--accent);color:#fff}
+  .btn.danger:hover{background:transparent;color:var(--accent)}
+
+  table.cases{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line)}
+  table.cases th{background:var(--ink);color:var(--paper);text-align:left;padding:12px 14px;font-weight:500;font-size:12px;letter-spacing:.1em;font-family:'Noto Serif TC',serif}
+  table.cases td{padding:14px;border-top:1px solid var(--line);font-size:14px;vertical-align:top}
+  table.cases tr:hover td{background:var(--hover)}
+  table.cases td.actions{text-align:right;white-space:nowrap}
+  .empty,.loading-box{padding:60px 20px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line)}
+
+  .doc{background:#fff;border:1px solid var(--line)}
+  .doc-header{padding:36px 44px 28px;border-bottom:2px solid var(--ink);background:linear-gradient(180deg,#fff 0%,var(--accent-soft) 100%)}
+  .doc-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}
+  .doc-title-row h1{font-size:30px;line-height:1.2}
+  .doc-title-row .stamp{border:2px solid var(--accent);color:var(--accent);padding:6px 14px;font-family:'Noto Serif TC',serif;font-weight:700;font-size:11px;letter-spacing:.3em;transform:rotate(-2deg);white-space:nowrap}
+  .doc-id{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:12px;margin-top:6px;letter-spacing:.1em}
+
+  .meta-grid{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line)}
+  .meta-field{padding:10px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;gap:12px}
+  .meta-field:nth-child(2n){border-right:none}
+  .meta-field:nth-last-child(-n+2){border-bottom:none}
+  .meta-field label{font-size:11px;letter-spacing:.15em;color:var(--muted);min-width:62px;font-family:'Noto Serif TC',serif;font-weight:500}
+  .meta-field input{flex:1;border:none;background:transparent;font-family:inherit;font-size:14px;padding:4px 0;border-bottom:1px dotted transparent}
+  .meta-field input:focus{outline:none;border-bottom-color:var(--ink)}
+  .meta-field.full{grid-column:1/-1;border-right:none}
+  body:not(.editing) .meta-field input{pointer-events:none}
+
+  .cat-section{border-top:1px solid var(--line)}
+  .cat-head{display:flex;align-items:center;justify-content:space-between;padding:16px 44px;background:#1a1a1a;color:var(--paper);cursor:pointer;user-select:none}
+  .cat-head .cat-title{display:flex;align-items:baseline;gap:14px}
+  .cat-head h3{font-size:16px;letter-spacing:.05em}
+  .cat-head .cat-no{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--paper);color:var(--ink);padding:2px 8px;letter-spacing:.1em}
+  .cat-head .cat-sum{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600}
+  .cat-head .chev{margin-left:12px;transition:transform .2s;font-size:12px}
+  .cat-section.collapsed .chev{transform:rotate(-90deg)}
+  .cat-section.collapsed .cat-body{display:none}
+  .cat-body{padding:14px 44px 24px}
+
+  table.items{width:100%;border-collapse:collapse;font-size:13px}
+  table.items th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--ink);font-family:'Noto Serif TC',serif;font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+  table.items td{padding:8px 6px;border-bottom:1px dotted var(--line);vertical-align:middle}
+  table.items td.num,table.items th.num{text-align:right;font-variant-numeric:tabular-nums}
+  table.items td input{width:100%;border:none;background:transparent;font-family:inherit;font-size:13px;padding:4px;border-bottom:1px dotted transparent}
+  table.items td input:focus{outline:none;border-bottom-color:var(--ink);background:var(--accent-soft)}
+  table.items td input.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+  table.items td.row-total{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--ink)}
+  table.items td.del-cell{width:30px;text-align:center}
+  table.items td .row-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
+  table.items td .row-del:hover{color:var(--accent)}
+  body:not(.editing) table.items td input{pointer-events:none}
+  body:not(.editing) .row-del,
+  body:not(.editing) .add-row,
+  body:not(.editing) .del-cell{display:none}
+
+  .add-row{margin-top:10px;background:none;border:1px dashed var(--line);color:var(--muted);padding:8px;width:100%;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.1em}
+  .add-row:hover{border-color:var(--ink);color:var(--ink);background:var(--hover)}
+
+  .summary{padding:28px 44px;background:var(--accent-soft);border-top:2px solid var(--ink)}
+  .sum-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:14px}
+  .sum-row .label{font-family:'Noto Serif TC',serif}
+  .sum-row .val{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  .design-input{width:60px;text-align:right;font-family:'JetBrains Mono',monospace;border:1px solid var(--line);background:#fff;padding:2px 6px;font-size:12px}
+  body:not(.editing) .design-input{pointer-events:none;border-color:transparent;background:transparent}
+  .sum-row.total{border-top:2px solid var(--ink);margin-top:8px;padding-top:14px;font-size:22px;font-weight:700;font-family:'Noto Serif TC',serif}
+  .sum-row.total .val{font-size:24px;font-weight:700}
+
+  .payment-block{margin-top:24px;padding-top:20px;border-top:1px dashed var(--line)}
+  .payment-block h4{font-size:13px;letter-spacing:.2em;color:var(--muted);margin-bottom:12px}
+  .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .pay-card{background:#fff;border:1px solid var(--line);padding:14px}
+  .pay-card .lbl{font-size:11px;letter-spacing:.15em;color:var(--muted);font-family:'Noto Serif TC',serif}
+  .pay-card .pct{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;margin-top:4px}
+  .pay-card .amt{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:var(--accent);font-size:15px;margin-top:6px}
+
+  .actions-bar{position:sticky;bottom:0;background:var(--paper);border-top:2px solid var(--ink);padding:14px 28px;display:flex;gap:10px;justify-content:space-between;align-items:center;margin:0 -28px -100px;z-index:40;box-shadow:0 -1px 8px rgba(0,0,0,.06)}
+  .actions-bar .left,.actions-bar .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .actions-bar .status{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .share-link{background:#fff;border:1px solid var(--line);padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;width:280px;max-width:32vw}
+
+  .doc-footer{padding:24px 44px 36px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .doc-footer .firm-name{font-family:'Noto Serif TC',serif;color:var(--ink);font-size:16px;font-weight:700;margin-bottom:6px}
+
+  /* CLEAN CLIENT VIEW — hide all chrome */
+  body.view-only .topbar,
+  body.view-only .actions-bar .left,
+  body.view-only .stamp,
+  body.view-only .doc-footer,
+  body.view-only .design-input,
+  body.view-only .doc-id{display:none}
+  body.view-only .doc{border:none;box-shadow:0 4px 24px rgba(0,0,0,.06);max-width:920px;margin:0 auto}
+  body.view-only .wrap{padding:24px 16px 60px;max-width:none}
+  body.view-only .summary .sum-row.design .label::after{content:' (' attr(data-pct) '%)';color:var(--muted);font-size:12px}
+
+  @media print{
+    .topbar,.actions-bar,.add-row,.row-del,.del-cell{display:none!important}
+    body{background:#fff}
+    .doc{border:none}
+    .cat-section.collapsed .cat-body{display:block!important}
+    .cat-section.collapsed .chev{display:none}
+  }
+
+  @media (max-width:760px){
+    .wrap{padding:20px 16px 100px}
+    .doc-header{padding:24px 20px}
+    .cat-head{padding:12px 20px}
+    .cat-body{padding:12px 20px 20px}
+    .summary{padding:20px}
+    .doc-footer{padding:20px}
+    .pay-grid{grid-template-columns:1fr}
+    .meta-grid{grid-template-columns:1fr}
+    .meta-field{border-right:none}
+    table.items{font-size:12px}
+    .doc-title-row h1{font-size:22px}
+    .actions-bar{flex-direction:column;align-items:stretch}
+    .actions-bar .left,.actions-bar .right{flex-wrap:wrap}
+    .share-link{width:100%;max-width:none}
+  }
+
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 24px;font-size:13px;letter-spacing:.05em;z-index:100;opacity:0;transition:opacity .2s;font-family:'Noto Serif TC',serif;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  .toast.err{background:var(--accent)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal{background:#fff;max-width:520px;width:100%;padding:28px;border:2px solid var(--ink)}
+  .modal h2{font-size:18px;margin-bottom:8px}
+  .modal p{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+  .modal label{display:block;font-size:11px;letter-spacing:.15em;color:var(--muted);margin-top:14px;margin-bottom:4px;font-family:'Noto Serif TC',serif}
+  .modal input{width:100%;padding:10px;border:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:12px}
+  .modal .row{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div>
+      <div class="logo">壹所寓研</div>
+      <div class="logo-sub">YI SUO YU YAN · QUOTATION SYSTEM</div>
+    </div>
+  </div>
+  <nav>
+    <span class="conn-status loading" id="conn">連線中…</span>
+    <button data-nav="list">案件列表</button>
+    <button data-nav="new">＋ 新增案件</button>
+    <button data-nav="config" title="設定">⚙</button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div id="app"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED = {"furniture":{"name":"傢俱傢電 / 軟裝布置","no":1,"items":[{"location":"","name":"雙人床組","qty":5.0,"unit":"組","price":6500.0,"note":""},{"location":"","name":"雙人沙發","qty":0.0,"unit":"組","price":6000.0,"note":""},{"location":"","name":"電視櫃","qty":0.0,"unit":"組","price":4500.0,"note":""},{"location":"","name":"茶几","qty":0.0,"unit":"組","price":3500.0,"note":""},{"location":"","name":"小邊桌","qty":0.0,"unit":"組","price":1400.0,"note":""},{"location":"","name":"衣櫃組","qty":0.0,"unit":"組","price":4700.0,"note":""},{"location":"","name":"書桌","qty":0.0,"unit":"組","price":1000.0,"note":""},{"location":"","name":"小圓桌","qty":0.0,"unit":"組","price":3500.0,"note":""},{"location":"","name":"吧檯椅","qty":0.0,"unit":"組","price":2300.0,"note":""},{"location":"","name":"書桌椅","qty":0.0,"unit":"組","price":2000.0,"note":""},{"location":"","name":"格子櫃","qty":0.0,"unit":"組","price":3000.0,"note":""},{"location":"","name":"布置品","qty":0.0,"unit":"組","price":10000.0,"note":""},{"location":"","name":"組裝 、搬運、管理","qty":0.0,"unit":"式","price":3000.0,"note":""}]},"demolition":{"name":"居民注意事項 / 環保 / 拆除","no":2,"items":[{"location":"全區域","name":"木作隔間拆除","qty":1.0,"unit":"","price":90000.0,"note":""},{"location":"全區域","name":"磁磚捧共剔除、廁所牆面拆除","qty":0,"unit":"","price":0,"note":""},{"location":"全區域","name":"舊家具清除","qty":0,"unit":"","price":0,"note":""},{"location":"雜物 / 廢棄物 搬運工","name":"廢棄物 搬運工","qty":6.0,"unit":"工","price":2500.0,"note":""},{"location":"廢棄物 合法處理車輛","name":"包含現場垃圾協助清運 處理","qty":4.0,"unit":"車","price":12000.0,"note":""}]},"electrical":{"name":"水電工程","no":3,"items":[{"location":"1.0","name":"分電箱開關箱","qty":4.0,"unit":"個","price":16500.0,"note":"含盤體、線材(安裝)"},{"location":"2.0","name":"新增電燈及插座","qty":40.0,"unit":"個","price":1500.0,"note":"110V迴路"},{"location":"3.0","name":"新增熱水器迴路","qty":4.0,"unit":"迴","price":2000.0,"note":"220V迴路"},{"location":"4.0","name":"新增冷氣電源","qty":9.0,"unit":"迴","price":2000.0,"note":"220V迴路"},{"location":"5.0","name":"新增流理臺專用迴路","qty":4.0,"unit":"迴","price":2000.0,"note":"廚房用5.5mm2"},{"location":"8.0","name":"新增電燈出線口","qty":52.0,"unit":"口","price":500.0,"note":""},{"location":"9.0","name":"新增網路出線口","qty":4.0,"unit":"口","price":1800.0,"note":""},{"location":"10.0","name":"新增電視出線口","qty":4.0,"unit":"口","price":1800.0,"note":""},{"location":"11.0","name":"冷水PVC管(含水源)","qty":16.0,"unit":"口","price":1500.0,"note":""},{"location":"12.0","name":"熱水白鐵壓接管","qty":12.0,"unit":"口","price":1500.0,"note":""},{"location":"13.0","name":"排水管","qty":20.0,"unit":"口","price":1200.0,"note":""},{"location":"14.0","name":"冷氣排水管","qty":9.0,"unit":"口","price":1200.0,"note":""},{"location":"15.0","name":"糞管出口","qty":4.0,"unit":"口","price":2500.0,"note":""},{"location":"16.0","name":"15加侖電熱水器(含安裝)","qty":4.0,"unit":"台","price":11000.0,"note":"亞昌/全鑫等同價位"},{"location":"17.0","name":"分電表安裝含線材(安裝)","qty":4.0,"unit":"組","price":12500.0,"note":""},{"location":"18.0","name":"集中電表箱","qty":1.0,"unit":"只","price":12500.0,"note":""},{"location":"19.0","name":"抽風機含風管安裝","qty":4.0,"unit":"組","price":1700.0,"note":"阿拉斯加/台芝/中一電工同等級"},{"location":"20.0","name":"台電申請換線(38平方)","qty":1.0,"unit":"式","price":41000.0,"note":""},{"location":"21.0","name":"加壓馬達安裝","qty":0.0,"unit":"式","price":7000.0,"note":"視現場需求增加"},{"location":"22.0","name":"崁燈開孔(7.5/9.5/12/15)","qty":52.0,"unit":"孔","price":100.0,"note":""}]},"lighting":{"name":"燈具採購 & 設備代購","no":4,"items":[{"location":"1.0","name":"崁燈-(7.5/9.5/12/15)","qty":52.0,"unit":"盞","price":220.0,"note":"3000K/4000K(聚光/泛光搭配)"},{"location":"2.0","name":"陽台吸頂燈","qty":4.0,"unit":"盞","price":320.0,"note":"4000K(聚光/泛光搭配)"},{"location":"3.0","name":"造型吊燈/壁燈","qty":4.0,"unit":"盞","price":2200.0,"note":"3000K"},{"location":"4.0","name":"間接照明/燈帶","qty":4.0,"unit":"個","price":3200.0,"note":"每間各一"},{"location":"5.0","name":"微波控制器","qty":1.0,"unit":"個","price":350.0,"note":""},{"location":"6.0","name":"滅火器","qty":0.0,"unit":"組","price":1200.0,"note":""}]},"bathroom":{"name":"衛浴設備","no":0,"items":[{"location":"","name":"衛浴設備","qty":0,"unit":"","price":0,"note":""},{"location":"","name":"1.0","qty":0,"unit":"4.0","price":0,"note":"58000"},{"location":"","name":"2.0","qty":0,"unit":"4.0","price":0,"note":"4000"},{"location":"","name":"3.0","qty":0,"unit":"4.0","price":0,"note":"20000"},{"location":"","name":"4.0","qty":0,"unit":"12.0","price":0,"note":"2400"},{"location":"","name":"5.0","qty":0,"unit":"1.0","price":0,"note":"-1500"}]},"partition":{"name":"隔間工程","no":5,"items":[{"location":"隔間位置","name":"輕質防潮石膏磚","qty":69.0,"unit":"m2","price":1980.0,"note":""}]},"masonry":{"name":"泥作 / 壁地磚","no":6,"items":[{"location":"廁所","name":"打底 10-15公分 (抓洩水)","qty":4.0,"unit":"式","price":7000.0,"note":""},{"location":"廁所","name":"防水  (一底兩度 + 抗裂網)","qty":4.0,"unit":"式","price":8000.0,"note":""},{"location":"廁所","name":"壁磚 (30*60)","qty":24.0,"unit":"坪","price":3200.0,"note":"含損耗"},{"location":"廁所","name":"壁磚  (30*60)貼工工資","qty":24.0,"unit":"坪","price":2000.0,"note":"含損耗"},{"location":"廁所","name":"地磚 (30*30) 貼工工資","qty":4.0,"unit":"間","price":8000.0,"note":"特殊磚另計"},{"location":"廁所","name":"地磚 (30*30) 材料 排水孔+門檻","qty":4.0,"unit":"間","price":4000.0,"note":"特殊磚另計"},{"location":"陽台","name":"打底 10-15公分 (抓洩水)","qty":3.0,"unit":"式","price":7000.0,"note":""},{"location":"陽台","name":"防水  ( 兩度 + 抗裂網)","qty":3.0,"unit":"式","price":7000.0,"note":""},{"location":"陽台","name":"地磚 (30*30)+ 排水孔+門檻","qty":3.0,"unit":"間","price":8000.0,"note":"特殊磚另計"},{"location":"陽台","name":"地磚 (30*30) 材料 排水孔+門檻","qty":3.0,"unit":"間","price":5000.0,"note":"特殊磚另計"},{"location":"陽台","name":"牆面二丁掛","qty":0.0,"unit":"間","price":10000.0,"note":"特殊磚另計"},{"location":"全室","name":"管溝修補","qty":1.0,"unit":"式","price":15000.0,"note":""},{"location":"全室","name":"見底補平","qty":1.0,"unit":"式","price":16000.0,"note":""},{"location":"全室","name":"壁癌打除部分補平","qty":1.0,"unit":"式","price":0.0,"note":""},{"location":"全室","name":"新站門框灌縫  + 窗框灌縫","qty":13.0,"unit":"樘","price":1200.0,"note":""},{"location":"料費","name":"水泥砂  -  五金材料","qty":1.0,"unit":"式","price":32000.0,"note":""}]},"carpentry":{"name":"木作工程","no":7,"items":[{"location":"A房 - B房","name":"天花板 (防水矽酸鈣 暗架平釘天花板)","qty":35.0,"unit":"坪","price":3000.0,"note":"中日 (防火材)"},{"location":"A房 - B房","name":"架高木地板","qty":2.0,"unit":"坪","price":3200.0,"note":"走道、房間"},{"location":"A房 - B房","name":"廁所內 天花","qty":4.0,"unit":"間","price":6000.0,"note":"木紋pvc"},{"location":"A房 - B房","name":"木作冷氣管包覆","qty":31.0,"unit":"尺","price":600.0,"note":""},{"location":"A房 - B房","name":"木作窗簾盒","qty":56.0,"unit":"尺","price":450.0,"note":""},{"location":"A房 - B房","name":"天花板-檢修孔","qty":10.0,"unit":"個","price":1000.0,"note":"房間+公共走道"},{"location":"A房 - B房","name":"天花板-檢修孔(熱水器)","qty":4.0,"unit":"個","price":1000.0,"note":"浴室"},{"location":"A房 - B房","name":"矽酸鈣單面封板","qty":99.0,"unit":"m2","price":1200.0,"note":"未含隔音棉"},{"location":"A房 - B房","name":"木作間接照明/燈槽","qty":8.0,"unit":"式","price":3000.0,"note":""},{"location":"A房 - B房","name":"木工浴室鏡櫃","qty":1.0,"unit":"式","price":6000.0,"note":"頂加浴室"},{"location":"A房 - B房","name":"木纖門","qty":2.0,"unit":"式","price":12000.0,"note":"頂樓"},{"location":"A房 - B房","name":"訂做系統櫃流理台120cm","qty":4.0,"unit":"座","price":18000.0,"note":"含水槽、龍頭五金及安裝"},{"location":"A房 - B房","name":"訂做人造石檯面120m","qty":0.0,"unit":"式","price":8400.0,"note":"人造石檯面"},{"location":"A房 - B房","name":"訂做系統櫃流理台180cm","qty":0.0,"unit":"座","price":14000.0,"note":"含水槽、龍頭五金及安裝"},{"location":"A房 - B房","name":"訂做人造石檯面180m","qty":0.0,"unit":"式","price":9600.0,"note":"人造石檯面"}]},"curtain":{"name":"窗簾","no":0,"items":[{"location":"","name":"陽台-落地窗簾","qty":2.0,"unit":"窗","price":6000.0,"note":"落地布簾(雙邊開)"},{"location":"","name":"窗簾","qty":4.0,"unit":"窗","price":3800.0,"note":"布簾"},{"location":"","name":"頂加窗簾","qty":3.0,"unit":"窗","price":3000.0,"note":"布簾"},{"location":"","name":"房間紗簾","qty":2.0,"unit":"窗","price":4500.0,"note":"布簾"}]},"paint":{"name":"油漆工程","no":8,"items":[{"location":"全室油漆含跳色","name":"房內天花 / 牆面","qty":1.0,"unit":"式","price":220000.0,"note":"得利 + 跳色"},{"location":"全室油漆含跳色","name":"走廊天花 / 牆面","qty":0,"unit":"","price":0,"note":""},{"location":"全室油漆含跳色","name":"廁所天花","qty":0,"unit":"","price":0,"note":""},{"location":"全室油漆含跳色","name":"AB膠 批土x2-3次 油漆","qty":0,"unit":"","price":0,"note":""},{"location":"戶外陽台防水漆","name":"三陽台 牆面白色防水漆","qty":1.0,"unit":"式","price":0,"note":""},{"location":"1~5樓梯間樓梯","name":"外走道牆面/天花","qty":0.0,"unit":"式","price":15000.0,"note":""}]},"flooring":{"name":"地板工程","no":9,"items":[{"location":"全室","name":"卡扣地板  / 同級品","qty":35.0,"unit":"坪","price":2500.0,"note":"含損料"},{"location":"全室","name":"搬運工","qty":2.0,"unit":"工","price":2000.0,"note":""}]},"metalDoor":{"name":"鋼鋁門窗、玻璃工程","no":10,"items":[{"location":"","name":"三合一通風門","qty":1.0,"unit":"樘","price":16000.0,"note":"5mm白色 W150*H150"},{"location":"","name":"浴室窗戶","qty":1.0,"unit":"樘","price":5200.0,"note":""},{"location":"","name":"房間氣密窗戶","qty":4.0,"unit":"樘","price":15800.0,"note":"W120xH150 5+5膠合玻璃"},{"location":"","name":"落地窗","qty":2.0,"unit":"樘","price":25530.0,"note":"5mm白色 W150*H220(37才)"},{"location":"","name":"房間-硫化銅門(不含電子鎖)","qty":4.0,"unit":"樘","price":13500.0,"note":""},{"location":"","name":"頂加鐵工開門洞&門框補強","qty":1.0,"unit":"式","price":12000.0,"note":""},{"location":"","name":"大門-硫化銅門(不含電子鎖)","qty":0.0,"unit":"樘","price":22000.0,"note":"造型"},{"location":"","name":"大門電子鎖","qty":1.0,"unit":"個","price":8500.0,"note":""},{"location":"","name":"頂樓公區大門","qty":1.0,"unit":"樘","price":12000.0,"note":"(頂樓公區大門油漆施作)金額改為浴室隔間牆"},{"location":"","name":"電子鎖含安裝","qty":4.0,"unit":"個","price":3000.0,"note":""},{"location":"","name":"浴室門把鎖","qty":4.0,"unit":"個","price":550.0,"note":""},{"location":"","name":"浴室門-塑鋼門","qty":4.0,"unit":"樘","price":4500.0,"note":""}]},"glass":{"name":"玻璃","no":0,"items":[{"location":"","name":"衛浴乾溼分離(一字型/黑)","qty":4.0,"unit":"式","price":15500.0,"note":"含安裝(黑色款)"},{"location":"","name":"流理臺牆面烤漆玻璃(可替換為貼磚)","qty":4.0,"unit":"式","price":3250.0,"note":"高60cm"},{"location":"","name":"細鋁框玻璃門/雜誌門","qty":1.0,"unit":"式","price":21000.0,"note":""},{"location":"","name":"細鋁框玻璃聯動門","qty":2.0,"unit":"式","price":51000.0,"note":""},{"location":"","name":"隔間牆內崁玻璃","qty":0.0,"unit":"式","price":4500.0,"note":""}]},"cleaning":{"name":"清潔工程","no":11,"items":[{"location":"","name":"清潔工程","qty":0,"unit":"","price":0,"note":""},{"location":"","name":"粗清潔","qty":37.0,"unit":"坪","price":400.0,"note":""},{"location":"","name":"廢棄物清運 裝潢後垃圾","qty":2.0,"unit":"台","price":12000.0,"note":""},{"location":"","name":"搬運工資","qty":4.0,"unit":"工","price":2000.0,"note":""}]},"waterproof":{"name":"頂樓防水 / 鐵皮修繕","no":12,"items":[{"location":"頂樓","name":"防水工程","qty":0.0,"unit":"式","price":0,"note":"1+3塗"},{"location":"頂樓","name":"素地整理/切割水條","qty":0.0,"unit":"","price":0,"note":"高壓沖洗 / 素地整理"},{"location":"頂樓","name":"防水保固","qty":0,"unit":"式","price":0.0,"note":""},{"location":"鐵皮修繕","name":"上方鐵皮覆蓋","qty":0.0,"unit":"式","price":0,"note":""}]},"ac":{"name":"冷氣工程","no":13,"items":[{"location":"B房","name":"28/ 定頻冷專","qty":8.0,"unit":"台","price":19000.0,"note":""},{"location":"B房","name":"36/ 定頻冷專","qty":1.0,"unit":"台","price":21000.0,"note":""},{"location":"B房","name":"銅管加長","qty":15.0,"unit":"米","price":500.0,"note":""},{"location":"ABC房","name":"洗孔","qty":9.0,"unit":"孔","price":1200.0,"note":""},{"location":"ABC房","name":"安裝架","qty":9.0,"unit":"個","price":1500.0,"note":""}]}};
+
+const CATEGORY_ORDER = [
+  'furniture','demolition','electrical','lighting','bathroom',
+  'partition','masonry','carpentry','curtain','paint',
+  'flooring','metalDoor','glass','cleaning','waterproof','ac'
+];
+
+const Config = {
+  get apiUrl() { return localStorage.getItem('ysyy_api_url') || ''; },
+  set apiUrl(v) { localStorage.setItem('ysyy_api_url', v); },
+  get token() { return localStorage.getItem('ysyy_api_token') || ''; },
+  set token(v) { localStorage.setItem('ysyy_api_token', v); },
+  get ready() { return !!this.apiUrl && !!this.token; }
+};
+
+const API = {
+  async _get(params) {
+    const url = Config.apiUrl + '?' + new URLSearchParams(params).toString();
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'API error');
+    return j;
+  },
+  async _post(body) {
+    const r = await fetch(Config.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'API error');
+    return j;
+  },
+  list()      { return this._get({ action:'list', token: Config.token }).then(j => j.quotes); },
+  get(id)     { return this._get({ action:'get', id }).then(j => j.quote); },
+  save(q)     { return this._post({ action:'save', token: Config.token, quote: q }).then(j => j.quote); },
+  delete(id)  { return this._post({ action:'delete', token: Config.token, id }).then(j => j.deleted); }
+};
+
+const Cache = {
+  _list: null,
+  invalidate() { this._list = null; },
+  async list(force=false) {
+    if (this._list && !force) return this._list;
+    this._list = await API.list();
+    return this._list;
+  }
+};
+
+const fmt = n => (Number(n)||0).toLocaleString('zh-TW');
+const todayISO = () => new Date().toISOString().slice(0,10);
+const genId = () => {
+  const d = new Date();
+  const ymd = d.getFullYear().toString().slice(2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  const rnd = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `Q${ymd}-${rnd}`;
+};
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function setConn(state, msg) {
+  const el = document.getElementById('conn');
+  el.className = 'conn-status ' + state;
+  el.textContent = msg;
+}
+function blankQuote() {
+  const cats = {};
+  CATEGORY_ORDER.forEach(cid => {
+    cats[cid] = { name: SEED[cid].name, no: SEED[cid].no, items: SEED[cid].items.map(it => ({...it})) };
+  });
+  return { id: genId(), client:'', phone:'', address:'', projectName:'', quoteDate: todayISO(),
+           designFeePct: 8, pay1Pct: 45, pay2Pct: 45, pay3Pct: 10, cats };
+}
+function cloneQuote(src) {
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = genId();
+  copy.client = (src.client || '') + ' (副本)';
+  copy.quoteDate = todayISO();
+  delete copy.createdAt;
+  delete copy.updatedAt;
+  return copy;
+}
+function calcTotals(q) {
+  const catTotals = {};
+  CATEGORY_ORDER.forEach(cid => {
+    const sum = ((q.cats && q.cats[cid] && q.cats[cid].items) || []).reduce(
+      (s,it) => s + (Number(it.qty)||0)*(Number(it.price)||0), 0);
+    catTotals[cid] = sum;
+  });
+  const subtotal = Object.values(catTotals).reduce((a,b)=>a+b,0);
+  const designFee = Math.round(subtotal * (Number(q.designFeePct)||0) / 100);
+  return { catTotals, subtotal, designFee, total: subtotal + designFee };
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function parseHash() {
+  const h = (location.hash || '#/list').slice(2);
+  const parts = h.split('/').filter(Boolean);
+  return { route: parts[0]||'list', id: parts[1]||null };
+}
+function navigate(path) { location.hash = '#/' + path; }
+
+window.addEventListener('hashchange', render);
+window.addEventListener('DOMContentLoaded', async () => {
+  bindNav();
+  const { route } = parseHash();
+  if (!Config.apiUrl) {
+    if (route === 'view') {
+      document.getElementById('app').innerHTML = '<div class="empty">系統尚未設定。請聯絡設計師。</div>';
+      setConn('err','未設定');
+      return;
+    }
+    openConfig(true);
+    return;
+  }
+  if (route === 'view') setConn('ok','連線正常');
+  else await pingApi();
+  render();
+});
+
+async function pingApi() {
+  if (!Config.token) { setConn('err','缺 Token'); return; }
+  try {
+    setConn('loading','連線中…');
+    await API.list();
+    setConn('ok','已連線');
+  } catch (e) {
+    setConn('err','連線失敗');
+    toast('無法連到後端：' + e.message, true);
+  }
+}
+
+function bindNav() {
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.onclick = async () => {
+      const target = btn.dataset.nav;
+      if (target === 'list') navigate('list');
+      if (target === 'config') openConfig(false);
+      if (target === 'new') {
+        if (!Config.ready) { openConfig(true); return; }
+        try {
+          const q = blankQuote();
+          await API.save(q);
+          Cache.invalidate();
+          navigate('edit/' + q.id);
+        } catch (e) { toast('建立失敗：' + e.message, true); }
+      }
+    };
+  });
+}
+function setActiveNav(name) {
+  document.querySelectorAll('[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === name);
+  });
+}
+
+function openConfig(forceFirstTime) {
+  if (document.getElementById('config-modal')) return;
+  const html = `
+    <div class="modal-bg" id="config-modal">
+      <div class="modal">
+        <h2>系統設定</h2>
+        <p>${forceFirstTime ? '首次使用，請輸入後端設定。詳細部署說明見 SETUP.md。' : '修改 Apps Script 部署網址與 Token。客戶版網址不受影響。'}</p>
+        <label>API URL（Apps Script 部署網址，以 /exec 結尾）</label>
+        <input id="cfg-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" value="${esc(Config.apiUrl)}">
+        <label>API Token（與 Code.gs 內的 API_TOKEN 完全相同）</label>
+        <input id="cfg-token" placeholder="你在 Code.gs 設定的那組長字串" value="${esc(Config.token)}">
+        <div class="row">
+          ${forceFirstTime ? '' : '<button class="btn ghost" id="cfg-cancel">取消</button>'}
+          <button class="btn" id="cfg-save">儲存並測試</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('cfg-save').onclick = async () => {
+    const url = document.getElementById('cfg-url').value.trim();
+    const token = document.getElementById('cfg-token').value.trim();
+    if (!url || !token) { toast('兩個欄位都要填', true); return; }
+    Config.apiUrl = url;
+    Config.token = token;
+    try {
+      await API.list();
+      setConn('ok','已連線');
+      toast('設定成功');
+      document.getElementById('config-modal').remove();
+      render();
+    } catch (e) {
+      setConn('err','連線失敗');
+      toast('測試失敗：' + e.message, true);
+    }
+  };
+  const cancel = document.getElementById('cfg-cancel');
+  if (cancel) cancel.onclick = () => document.getElementById('config-modal').remove();
+}
+
+async function render() {
+  const { route, id } = parseHash();
+  const app = document.getElementById('app');
+  document.body.classList.remove('editing','view-only');
+
+  if (route === 'view' && id) {
+    document.body.classList.add('view-only');
+    setActiveNav('');
+    return renderView(app, id);
+  }
+  if (!Config.ready) { openConfig(true); return; }
+  if (route === 'edit' && id) {
+    document.body.classList.add('editing');
+    setActiveNav('new');
+    return renderEdit(app, id);
+  }
+  setActiveNav('list');
+  renderList(app);
+}
+
+async function renderList(app) {
+  app.innerHTML = `
+    <div class="list-header">
+      <div>
+        <h1>案件列表</h1>
+        <div class="meta" id="case-count">載入中…</div>
+      </div>
+      <button class="btn" id="new-case">＋ 新建案件</button>
+    </div>
+    <div class="search-bar">
+      <input id="q" placeholder="搜尋客戶名稱 / 電話 / 地址 / 工程名稱 / 編號…" autocomplete="off">
+    </div>
+    <div id="case-table"><div class="loading-box">載入中…</div></div>
+  `;
+  document.getElementById('new-case').onclick = async () => {
+    try {
+      const q = blankQuote();
+      await API.save(q);
+      Cache.invalidate();
+      navigate('edit/' + q.id);
+    } catch (e) { toast('建立失敗：' + e.message, true); }
+  };
+
+  let allCases = [];
+  try { allCases = await Cache.list(); }
+  catch (e) {
+    document.getElementById('case-table').innerHTML = `<div class="empty">載入失敗：${esc(e.message)}。請檢查 ⚙ 設定。</div>`;
+    document.getElementById('case-count').textContent = '—';
+    return;
+  }
+  document.getElementById('case-count').textContent = `共 ${allCases.length} 筆 · 點擊任一筆進入編輯`;
+
+  const refresh = term => {
+    const t = (term||'').toLowerCase();
+    const filtered = (!t ? allCases : allCases.filter(c =>
+      (c.client||'').toLowerCase().includes(t) ||
+      (c.phone||'').toLowerCase().includes(t) ||
+      (c.address||'').toLowerCase().includes(t) ||
+      (c.projectName||'').toLowerCase().includes(t) ||
+      (c.id||'').toLowerCase().includes(t)
+    )).slice().sort((a,b) => String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+    const box = document.getElementById('case-table');
+    if (!filtered.length) {
+      box.innerHTML = `<div class="empty">${term ? '找不到符合條件的案件' : '尚無案件，點右上「＋ 新增案件」開始'}</div>`;
+      return;
+    }
+    box.innerHTML = `
+      <table class="cases">
+        <thead><tr>
+          <th style="width:130px">編號</th>
+          <th>客戶 / 工程</th>
+          <th style="width:120px">電話</th>
+          <th>地址</th>
+          <th style="width:120px" class="num">總價</th>
+          <th style="width:110px">更新</th>
+          <th style="width:280px"></th>
+        </tr></thead>
+        <tbody>
+          ${filtered.map(c => `<tr>
+            <td class="mono">${esc(c.id)}</td>
+            <td><strong>${esc(c.client||'（未填客戶）')}</strong><br><span style="color:var(--muted);font-size:12px">${esc(c.projectName||'')}</span></td>
+            <td class="mono">${esc(c.phone||'—')}</td>
+            <td>${esc(c.address||'—')}</td>
+            <td class="num">NT$ ${fmt(c.total)}</td>
+            <td style="font-size:12px;color:var(--muted)">${String(c.updatedAt||'').slice(0,10)}</td>
+            <td class="actions">
+              <button class="btn small ghost" data-act="view" data-id="${esc(c.id)}">客戶版</button>
+              <button class="btn small ghost" data-act="copy" data-id="${esc(c.id)}">複製</button>
+              <button class="btn small" data-act="edit" data-id="${esc(c.id)}">編輯</button>
+              <button class="btn small danger" data-act="del" data-id="${esc(c.id)}">刪</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+    box.querySelectorAll('button[data-act]').forEach(b => {
+      b.onclick = async () => {
+        const id = b.dataset.id, act = b.dataset.act;
+        if (act === 'view') navigate('view/' + id);
+        if (act === 'edit') navigate('edit/' + id);
+        if (act === 'copy') {
+          try {
+            b.disabled = true;
+            const src = await API.get(id);
+            const copy = cloneQuote(src);
+            await API.save(copy);
+            Cache.invalidate();
+            toast('已複製為新案件');
+            navigate('edit/' + copy.id);
+          } catch (e) { toast('複製失敗：' + e.message, true); b.disabled = false; }
+        }
+        if (act === 'del') {
+          if (!confirm('確定刪除此案件？此動作無法復原。')) return;
+          try {
+            await API.delete(id);
+            Cache.invalidate();
+            allCases = allCases.filter(x => x.id !== id);
+            refresh(document.getElementById('q').value);
+            toast('已刪除');
+          } catch (e) { toast('刪除失敗：' + e.message, true); }
+        }
+      };
+    });
+  };
+  document.getElementById('q').addEventListener('input', e => refresh(e.target.value));
+  refresh('');
+}
+
+function renderDoc(app, q, opts) {
+  const editable = !!opts.editable;
+  const t = calcTotals(q);
+  const pay1 = Math.round(t.total * q.pay1Pct / 100);
+  const pay2 = Math.round(t.total * q.pay2Pct / 100);
+  const pay3 = t.total - pay1 - pay2;
+
+  app.innerHTML = `
+    <div class="doc">
+      <header class="doc-header">
+        <div class="doc-title-row">
+          <div>
+            <h1>工程預算報價單</h1>
+            <div class="doc-id">編號 ${esc(q.id)} · 開立日期 <span id="qd">${esc(q.quoteDate)}</span></div>
+          </div>
+          <div class="stamp">${editable ? 'DRAFT 草稿' : 'OFFICIAL 正式報價'}</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-field"><label>客戶名稱</label><input data-f="client" value="${esc(q.client)}" placeholder="—"></div>
+          <div class="meta-field"><label>電話</label><input data-f="phone" value="${esc(q.phone)}" placeholder="—"></div>
+          <div class="meta-field"><label>工程名稱</label><input data-f="projectName" value="${esc(q.projectName)}" placeholder="—"></div>
+          <div class="meta-field"><label>開立日期</label><input data-f="quoteDate" type="date" value="${esc(q.quoteDate)}"></div>
+          <div class="meta-field full"><label>工程地址</label><input data-f="address" value="${esc(q.address)}" placeholder="—"></div>
+        </div>
+      </header>
+
+      ${CATEGORY_ORDER.map(cid => renderCat(q, cid, t.catTotals[cid])).join('')}
+
+      <section class="summary">
+        <div class="sum-row"><span class="label">小計（不含設計監工）</span><span class="val num">NT$ <span id="sub">${fmt(t.subtotal)}</span></span></div>
+        <div class="sum-row design">
+          <span class="label" data-pct="${q.designFeePct}">圖面設計 + 現場監工 <input class="design-input" type="number" min="0" max="30" step="0.5" data-f="designFeePct" value="${q.designFeePct}">%</span>
+          <span class="val num">NT$ <span id="dfee">${fmt(t.designFee)}</span></span>
+        </div>
+        <div class="sum-row total"><span class="label">設計總價</span><span class="val num">NT$ <span id="ttl">${fmt(t.total)}</span></span></div>
+
+        <div class="payment-block">
+          <h4>付款條件</h4>
+          <div class="pay-grid">
+            <div class="pay-card"><div class="lbl">第一期</div><div class="pct"><input class="design-input" type="number" data-f="pay1Pct" value="${q.pay1Pct}" min="0" max="100">%</div><div class="amt num">NT$ <span id="p1">${fmt(pay1)}</span></div></div>
+            <div class="pay-card"><div class="lbl">第二期</div><div class="pct"><input class="design-input" type="number" data-f="pay2Pct" value="${q.pay2Pct}" min="0" max="100">%</div><div class="amt num">NT$ <span id="p2">${fmt(pay2)}</span></div></div>
+            <div class="pay-card"><div class="lbl">第三期（尾款）</div><div class="pct num"><span id="p3pct">${100 - q.pay1Pct - q.pay2Pct}</span>%</div><div class="amt num">NT$ <span id="p3">${fmt(pay3)}</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="doc-footer">
+        <div class="firm-name">壹所寓研空間設計有限公司</div>
+        <div>本報價單為設計監造服務之預算編列，所列單價已包含材料、工資與一般施作損耗。</div>
+        <div style="margin-top:8px">特殊規格、現場變更、業主指定升級材料者，將另行計算。報價有效期自開立日起 30 日內。</div>
+      </footer>
+    </div>
+
+    ${editable ? `
+    <div class="actions-bar">
+      <div class="left">
+        <button class="btn ghost" id="back">← 返回列表</button>
+        <span class="status" id="save-status">已自動儲存</span>
+      </div>
+      <div class="right">
+        <input class="share-link" id="share-link" readonly>
+        <button class="btn ghost" id="copy-link">複製公開網址</button>
+        <button class="btn ghost" id="preview">客戶版預覽</button>
+        <button class="btn ghost" id="copy-case">複製為新案件</button>
+        <button class="btn" onclick="window.print()">列印 / PDF</button>
+      </div>
+    </div>` : `
+    <div class="actions-bar" style="display:flex">
+      <div class="left"></div>
+      <div class="right"><button class="btn" onclick="window.print()">列印 / 另存 PDF</button></div>
+    </div>`}
+  `;
+
+  if (editable) attachEditHandlers(q);
+}
+
+function renderCat(q, cid, sum) {
+  const cat = q.cats[cid];
+  return `
+    <section class="cat-section" data-cat="${cid}">
+      <header class="cat-head" data-toggle="${cid}">
+        <div class="cat-title">
+          <span class="cat-no">${cat.no ? '附表 '+cat.no : '附表'}</span>
+          <h3>${esc(cat.name)}</h3>
+        </div>
+        <div><span class="cat-sum">NT$ <span data-catsum="${cid}">${fmt(sum)}</span></span><span class="chev">▼</span></div>
+      </header>
+      <div class="cat-body">
+        <table class="items">
+          <thead><tr>
+            <th style="width:110px">位置</th>
+            <th>項目內容</th>
+            <th style="width:70px" class="num">數量</th>
+            <th style="width:60px">單位</th>
+            <th style="width:90px" class="num">單價</th>
+            <th style="width:110px" class="num">複價</th>
+            <th>備註</th>
+            <th class="del-cell"></th>
+          </tr></thead>
+          <tbody data-rows="${cid}">
+            ${cat.items.map((it,idx) => itemRow(cid, idx, it)).join('')}
+          </tbody>
+        </table>
+        <button class="add-row" data-add="${cid}">＋ 新增項目</button>
+      </div>
+    </section>`;
+}
+function itemRow(cid, idx, it) {
+  const total = (Number(it.qty)||0) * (Number(it.price)||0);
+  return `<tr data-cid="${cid}" data-idx="${idx}">
+    <td><input data-k="location" value="${esc(it.location)}"></td>
+    <td><input data-k="name" value="${esc(it.name)}"></td>
+    <td class="num"><input class="num" data-k="qty" type="number" step="0.5" value="${it.qty}"></td>
+    <td><input data-k="unit" value="${esc(it.unit)}"></td>
+    <td class="num"><input class="num" data-k="price" type="number" step="100" value="${it.price}"></td>
+    <td class="num row-total">${fmt(total)}</td>
+    <td><input data-k="note" value="${esc(it.note)}"></td>
+    <td class="del-cell"><button class="row-del" title="刪除">×</button></td>
+  </tr>`;
+}
+
+function attachEditHandlers(q) {
+  let saveTimer = null;
+  let saving = false;
+  let dirty = false;
+  const status = () => document.getElementById('save-status');
+
+  const queueSave = () => {
+    dirty = true;
+    status().textContent = '編輯中…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, 800);
+  };
+  const doSave = async () => {
+    if (saving || !dirty) return;
+    saving = true; dirty = false;
+    status().textContent = '儲存中…';
+    try {
+      await API.save(q);
+      Cache.invalidate();
+      status().textContent = '已儲存 · ' + new Date().toLocaleTimeString('zh-TW');
+      status().style.color = '';
+      status().style.cursor = '';
+      status().onclick = null;
+    } catch (e) {
+      status().textContent = '⚠ 儲存失敗，點此重試';
+      status().style.color = 'var(--accent)';
+      status().style.cursor = 'pointer';
+      status().onclick = () => { dirty=true; doSave(); };
+    } finally { saving = false; }
+  };
+
+  window.onbeforeunload = () => dirty ? '尚有未儲存內容' : undefined;
+
+  const recalc = () => {
+    const t = calcTotals(q);
+    CATEGORY_ORDER.forEach(cid => {
+      const el = document.querySelector('[data-catsum="'+cid+'"]');
+      if (el) el.textContent = fmt(t.catTotals[cid]);
+    });
+    document.getElementById('sub').textContent = fmt(t.subtotal);
+    document.getElementById('dfee').textContent = fmt(t.designFee);
+    document.getElementById('ttl').textContent = fmt(t.total);
+    const pay1 = Math.round(t.total * q.pay1Pct / 100);
+    const pay2 = Math.round(t.total * q.pay2Pct / 100);
+    const pay3 = t.total - pay1 - pay2;
+    document.getElementById('p1').textContent = fmt(pay1);
+    document.getElementById('p2').textContent = fmt(pay2);
+    document.getElementById('p3').textContent = fmt(pay3);
+    document.getElementById('p3pct').textContent = (100 - q.pay1Pct - q.pay2Pct);
+    // update the data-pct attribute for client view rendering
+    const designLabel = document.querySelector('.sum-row.design .label');
+    if (designLabel) designLabel.setAttribute('data-pct', q.designFeePct);
+  };
+
+  document.querySelectorAll('.meta-field input,.design-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.f;
+      if (!k) return;
+      const v = inp.type === 'number' ? Number(inp.value) : inp.value;
+      q[k] = v;
+      if (k === 'quoteDate') document.getElementById('qd').textContent = inp.value;
+      recalc();
+      queueSave();
+    });
+  });
+
+  document.querySelectorAll('[data-toggle]').forEach(h => {
+    h.onclick = e => {
+      if (e.target.tagName === 'INPUT') return;
+      h.closest('.cat-section').classList.toggle('collapsed');
+    };
+  });
+
+  CATEGORY_ORDER.forEach(cid => {
+    const body = document.querySelector('[data-rows="'+cid+'"]');
+    body.addEventListener('input', e => {
+      const tr = e.target.closest('tr');
+      if (!tr) return;
+      const idx = Number(tr.dataset.idx);
+      const k = e.target.dataset.k;
+      const v = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
+      q.cats[cid].items[idx][k] = v;
+      const it = q.cats[cid].items[idx];
+      tr.querySelector('.row-total').textContent = fmt((Number(it.qty)||0)*(Number(it.price)||0));
+      recalc();
+      queueSave();
+    });
+    body.addEventListener('click', e => {
+      if (e.target.classList.contains('row-del')) {
+        const tr = e.target.closest('tr');
+        const idx = Number(tr.dataset.idx);
+        q.cats[cid].items.splice(idx,1);
+        queueSave();
+        renderDoc(document.getElementById('app'), q, { editable: true });
+        // re-attach
+        attachEditHandlers(q);
+      }
+    });
+    document.querySelector('[data-add="'+cid+'"]').onclick = () => {
+      q.cats[cid].items.push({location:'',name:'',qty:1,unit:'式',price:0,note:''});
+      queueSave();
+      renderDoc(document.getElementById('app'), q, { editable: true });
+      attachEditHandlers(q);
+    };
+  });
+
+  document.getElementById('back').onclick = async () => {
+    if (dirty) { await doSave(); }
+    window.onbeforeunload = null;
+    navigate('list');
+  };
+  document.getElementById('preview').onclick = async () => {
+    if (dirty) await doSave();
+    navigate('view/' + q.id);
+  };
+  document.getElementById('copy-case').onclick = async () => {
+    if (dirty) await doSave();
+    try {
+      const copy = cloneQuote(q);
+      await API.save(copy);
+      Cache.invalidate();
+      toast('已複製為新案件');
+      window.onbeforeunload = null;
+      navigate('edit/' + copy.id);
+    } catch (e) { toast('複製失敗：' + e.message, true); }
+  };
+
+  const linkInp = document.getElementById('share-link');
+  linkInp.value = location.origin + location.pathname + '#/view/' + q.id;
+  document.getElementById('copy-link').onclick = async () => {
+    linkInp.select();
+    try {
+      await navigator.clipboard.writeText(linkInp.value);
+      toast('公開網址已複製');
+    } catch {
+      document.execCommand('copy');
+      toast('公開網址已複製');
+    }
+  };
+}
+
+async function renderEdit(app, id) {
+  app.innerHTML = '<div class="loading-box">載入中…</div>';
+  try {
+    const q = await API.get(id);
+    renderDoc(app, q, { editable: true });
+  } catch (e) {
+    app.innerHTML = `<div class="empty">載入失敗：${esc(e.message)}</div>`;
+  }
+}
+async function renderView(app, id) {
+  app.innerHTML = '<div class="loading-box">載入中…</div>';
+  try {
+    const q = await API.get(id);
+    renderDoc(app, q, { editable: false });
+  } catch (e) {
+    app.innerHTML = `<div class="empty">找不到此報價單或網路錯誤</div>`;
+  }
+}
+</script>
+</body>
+</html>
