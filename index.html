@@ -8,15 +8,35 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#1a1a1a;
-    --paper:#fafaf7;
-    --line:#d8d4c8;
-    --muted:#7a7568;
-    --accent:#8b3a2a;
-    --accent-soft:#f3ebe4;
-    --hover:#f1ede2;
+  /* === THEME PALETTES === */
+  :root,[data-theme="paper"]{
+    --ink:#1a1a1a; --paper:#fafaf7; --line:#d8d4c8; --muted:#7a7568;
+    --accent:#8b3a2a; --accent-soft:#f3ebe4; --hover:#f1ede2;
   }
+  [data-theme="midnight"]{
+    --ink:#0f1a2e; --paper:#f4f6fa; --line:#c8d0dc; --muted:#5a6478;
+    --accent:#3a5a9e; --accent-soft:#e3eaf5; --hover:#eaeef5;
+  }
+  [data-theme="terracotta"]{
+    --ink:#2c1810; --paper:#faf2e8; --line:#d9c4a8; --muted:#7a5f48;
+    --accent:#b04a2c; --accent-soft:#f5e3d4; --hover:#f0e2cc;
+  }
+  [data-theme="forest"]{
+    --ink:#1a2820; --paper:#f6f4ec; --line:#c8cdb8; --muted:#5a6852;
+    --accent:#3d6149; --accent-soft:#e5ecd9; --hover:#ecefdf;
+  }
+
+  /* theme switcher floating button */
+  .theme-switch{position:fixed;bottom:20px;right:20px;z-index:90;display:flex;gap:6px;background:#fff;border:1px solid var(--ink);padding:6px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+  .theme-switch button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:transform .15s}
+  .theme-switch button:hover{transform:scale(1.15)}
+  .theme-switch button.active{border-color:var(--ink)}
+  .theme-switch button[data-t="paper"]{background:#8b3a2a}
+  .theme-switch button[data-t="midnight"]{background:#3a5a9e}
+  .theme-switch button[data-t="terracotta"]{background:#b04a2c}
+  .theme-switch button[data-t="forest"]{background:#3d6149}
+  @media print{ .theme-switch{display:none} }
+  body.view-only .theme-switch{display:none}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--paper);color:var(--ink);font-family:'Noto Sans TC',-apple-system,sans-serif;font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased}
   h1,h2,h3,h4{font-family:'Noto Serif TC',serif;font-weight:700;letter-spacing:.02em}
@@ -143,6 +163,7 @@
   body.view-only .doc{border:none;box-shadow:0 4px 24px rgba(0,0,0,.06);max-width:920px;margin:0 auto}
   body.view-only .wrap{padding:24px 16px 60px;max-width:none}
   body.view-only .summary .sum-row.design .label::after{content:' (' attr(data-pct) '%)';color:var(--muted);font-size:12px}
+  body.view-only .summary .sum-row.tax .label::after{content:' (' attr(data-pct) '%)';color:var(--muted);font-size:12px}
 
   @media print{
     .topbar,.actions-bar,.add-row,.row-del,.del-cell{display:none!important}
@@ -204,6 +225,13 @@
 </main>
 
 <div class="toast" id="toast"></div>
+
+<div class="theme-switch" id="theme-switch">
+  <button data-t="paper" title="紙感黑金"></button>
+  <button data-t="midnight" title="午夜藍"></button>
+  <button data-t="terracotta" title="陶土紅"></button>
+  <button data-t="forest" title="森林綠"></button>
+</div>
 
 <script>
 const SEED = {"furniture":{"name":"傢俱傢電 / 軟裝布置","no":1,"items":[{"location":"","name":"雙人床組","qty":5.0,"unit":"組","price":6500.0,"note":""},{"location":"","name":"雙人沙發","qty":0.0,"unit":"組","price":6000.0,"note":""},{"location":"","name":"電視櫃","qty":0.0,"unit":"組","price":4500.0,"note":""},{"location":"","name":"茶几","qty":0.0,"unit":"組","price":3500.0,"note":""},{"location":"","name":"小邊桌","qty":0.0,"unit":"組","price":1400.0,"note":""},{"location":"","name":"衣櫃組","qty":0.0,"unit":"組","price":4700.0,"note":""},{"location":"","name":"書桌","qty":0.0,"unit":"組","price":1000.0,"note":""},{"location":"","name":"小圓桌","qty":0.0,"unit":"組","price":3500.0,"note":""},{"location":"","name":"吧檯椅","qty":0.0,"unit":"組","price":2300.0,"note":""},{"location":"","name":"書桌椅","qty":0.0,"unit":"組","price":2000.0,"note":""},{"location":"","name":"格子櫃","qty":0.0,"unit":"組","price":3000.0,"note":""},{"location":"","name":"布置品","qty":0.0,"unit":"組","price":10000.0,"note":""},{"location":"","name":"組裝 、搬運、管理","qty":0.0,"unit":"式","price":3000.0,"note":""}]},"demolition":{"name":"居民注意事項 / 環保 / 拆除","no":2,"items":[{"location":"全區域","name":"木作隔間拆除","qty":1.0,"unit":"","price":90000.0,"note":""},{"location":"全區域","name":"磁磚捧共剔除、廁所牆面拆除","qty":0,"unit":"","price":0,"note":""},{"location":"全區域","name":"舊家具清除","qty":0,"unit":"","price":0,"note":""},{"location":"雜物 / 廢棄物 搬運工","name":"廢棄物 搬運工","qty":6.0,"unit":"工","price":2500.0,"note":""},{"location":"廢棄物 合法處理車輛","name":"包含現場垃圾協助清運 處理","qty":4.0,"unit":"車","price":12000.0,"note":""}]},"electrical":{"name":"水電工程","no":3,"items":[{"location":"1.0","name":"分電箱開關箱","qty":4.0,"unit":"個","price":16500.0,"note":"含盤體、線材(安裝)"},{"location":"2.0","name":"新增電燈及插座","qty":40.0,"unit":"個","price":1500.0,"note":"110V迴路"},{"location":"3.0","name":"新增熱水器迴路","qty":4.0,"unit":"迴","price":2000.0,"note":"220V迴路"},{"location":"4.0","name":"新增冷氣電源","qty":9.0,"unit":"迴","price":2000.0,"note":"220V迴路"},{"location":"5.0","name":"新增流理臺專用迴路","qty":4.0,"unit":"迴","price":2000.0,"note":"廚房用5.5mm2"},{"location":"8.0","name":"新增電燈出線口","qty":52.0,"unit":"口","price":500.0,"note":""},{"location":"9.0","name":"新增網路出線口","qty":4.0,"unit":"口","price":1800.0,"note":""},{"location":"10.0","name":"新增電視出線口","qty":4.0,"unit":"口","price":1800.0,"note":""},{"location":"11.0","name":"冷水PVC管(含水源)","qty":16.0,"unit":"口","price":1500.0,"note":""},{"location":"12.0","name":"熱水白鐵壓接管","qty":12.0,"unit":"口","price":1500.0,"note":""},{"location":"13.0","name":"排水管","qty":20.0,"unit":"口","price":1200.0,"note":""},{"location":"14.0","name":"冷氣排水管","qty":9.0,"unit":"口","price":1200.0,"note":""},{"location":"15.0","name":"糞管出口","qty":4.0,"unit":"口","price":2500.0,"note":""},{"location":"16.0","name":"15加侖電熱水器(含安裝)","qty":4.0,"unit":"台","price":11000.0,"note":"亞昌/全鑫等同價位"},{"location":"17.0","name":"分電表安裝含線材(安裝)","qty":4.0,"unit":"組","price":12500.0,"note":""},{"location":"18.0","name":"集中電表箱","qty":1.0,"unit":"只","price":12500.0,"note":""},{"location":"19.0","name":"抽風機含風管安裝","qty":4.0,"unit":"組","price":1700.0,"note":"阿拉斯加/台芝/中一電工同等級"},{"location":"20.0","name":"台電申請換線(38平方)","qty":1.0,"unit":"式","price":41000.0,"note":""},{"location":"21.0","name":"加壓馬達安裝","qty":0.0,"unit":"式","price":7000.0,"note":"視現場需求增加"},{"location":"22.0","name":"崁燈開孔(7.5/9.5/12/15)","qty":52.0,"unit":"孔","price":100.0,"note":""}]},"lighting":{"name":"燈具採購 & 設備代購","no":4,"items":[{"location":"1.0","name":"崁燈-(7.5/9.5/12/15)","qty":52.0,"unit":"盞","price":220.0,"note":"3000K/4000K(聚光/泛光搭配)"},{"location":"2.0","name":"陽台吸頂燈","qty":4.0,"unit":"盞","price":320.0,"note":"4000K(聚光/泛光搭配)"},{"location":"3.0","name":"造型吊燈/壁燈","qty":4.0,"unit":"盞","price":2200.0,"note":"3000K"},{"location":"4.0","name":"間接照明/燈帶","qty":4.0,"unit":"個","price":3200.0,"note":"每間各一"},{"location":"5.0","name":"微波控制器","qty":1.0,"unit":"個","price":350.0,"note":""},{"location":"6.0","name":"滅火器","qty":0.0,"unit":"組","price":1200.0,"note":""}]},"bathroom":{"name":"衛浴設備","no":0,"items":[{"location":"","name":"衛浴設備","qty":0,"unit":"","price":0,"note":""},{"location":"","name":"1.0","qty":0,"unit":"4.0","price":0,"note":"58000"},{"location":"","name":"2.0","qty":0,"unit":"4.0","price":0,"note":"4000"},{"location":"","name":"3.0","qty":0,"unit":"4.0","price":0,"note":"20000"},{"location":"","name":"4.0","qty":0,"unit":"12.0","price":0,"note":"2400"},{"location":"","name":"5.0","qty":0,"unit":"1.0","price":0,"note":"-1500"}]},"partition":{"name":"隔間工程","no":5,"items":[{"location":"隔間位置","name":"輕質防潮石膏磚","qty":69.0,"unit":"m2","price":1980.0,"note":""}]},"masonry":{"name":"泥作 / 壁地磚","no":6,"items":[{"location":"廁所","name":"打底 10-15公分 (抓洩水)","qty":4.0,"unit":"式","price":7000.0,"note":""},{"location":"廁所","name":"防水  (一底兩度 + 抗裂網)","qty":4.0,"unit":"式","price":8000.0,"note":""},{"location":"廁所","name":"壁磚 (30*60)","qty":24.0,"unit":"坪","price":3200.0,"note":"含損耗"},{"location":"廁所","name":"壁磚  (30*60)貼工工資","qty":24.0,"unit":"坪","price":2000.0,"note":"含損耗"},{"location":"廁所","name":"地磚 (30*30) 貼工工資","qty":4.0,"unit":"間","price":8000.0,"note":"特殊磚另計"},{"location":"廁所","name":"地磚 (30*30) 材料 排水孔+門檻","qty":4.0,"unit":"間","price":4000.0,"note":"特殊磚另計"},{"location":"陽台","name":"打底 10-15公分 (抓洩水)","qty":3.0,"unit":"式","price":7000.0,"note":""},{"location":"陽台","name":"防水  ( 兩度 + 抗裂網)","qty":3.0,"unit":"式","price":7000.0,"note":""},{"location":"陽台","name":"地磚 (30*30)+ 排水孔+門檻","qty":3.0,"unit":"間","price":8000.0,"note":"特殊磚另計"},{"location":"陽台","name":"地磚 (30*30) 材料 排水孔+門檻","qty":3.0,"unit":"間","price":5000.0,"note":"特殊磚另計"},{"location":"陽台","name":"牆面二丁掛","qty":0.0,"unit":"間","price":10000.0,"note":"特殊磚另計"},{"location":"全室","name":"管溝修補","qty":1.0,"unit":"式","price":15000.0,"note":""},{"location":"全室","name":"見底補平","qty":1.0,"unit":"式","price":16000.0,"note":""},{"location":"全室","name":"壁癌打除部分補平","qty":1.0,"unit":"式","price":0.0,"note":""},{"location":"全室","name":"新站門框灌縫  + 窗框灌縫","qty":13.0,"unit":"樘","price":1200.0,"note":""},{"location":"料費","name":"水泥砂  -  五金材料","qty":1.0,"unit":"式","price":32000.0,"note":""}]},"carpentry":{"name":"木作工程","no":7,"items":[{"location":"A房 - B房","name":"天花板 (防水矽酸鈣 暗架平釘天花板)","qty":35.0,"unit":"坪","price":3000.0,"note":"中日 (防火材)"},{"location":"A房 - B房","name":"架高木地板","qty":2.0,"unit":"坪","price":3200.0,"note":"走道、房間"},{"location":"A房 - B房","name":"廁所內 天花","qty":4.0,"unit":"間","price":6000.0,"note":"木紋pvc"},{"location":"A房 - B房","name":"木作冷氣管包覆","qty":31.0,"unit":"尺","price":600.0,"note":""},{"location":"A房 - B房","name":"木作窗簾盒","qty":56.0,"unit":"尺","price":450.0,"note":""},{"location":"A房 - B房","name":"天花板-檢修孔","qty":10.0,"unit":"個","price":1000.0,"note":"房間+公共走道"},{"location":"A房 - B房","name":"天花板-檢修孔(熱水器)","qty":4.0,"unit":"個","price":1000.0,"note":"浴室"},{"location":"A房 - B房","name":"矽酸鈣單面封板","qty":99.0,"unit":"m2","price":1200.0,"note":"未含隔音棉"},{"location":"A房 - B房","name":"木作間接照明/燈槽","qty":8.0,"unit":"式","price":3000.0,"note":""},{"location":"A房 - B房","name":"木工浴室鏡櫃","qty":1.0,"unit":"式","price":6000.0,"note":"頂加浴室"},{"location":"A房 - B房","name":"木纖門","qty":2.0,"unit":"式","price":12000.0,"note":"頂樓"},{"location":"A房 - B房","name":"訂做系統櫃流理台120cm","qty":4.0,"unit":"座","price":18000.0,"note":"含水槽、龍頭五金及安裝"},{"location":"A房 - B房","name":"訂做人造石檯面120m","qty":0.0,"unit":"式","price":8400.0,"note":"人造石檯面"},{"location":"A房 - B房","name":"訂做系統櫃流理台180cm","qty":0.0,"unit":"座","price":14000.0,"note":"含水槽、龍頭五金及安裝"},{"location":"A房 - B房","name":"訂做人造石檯面180m","qty":0.0,"unit":"式","price":9600.0,"note":"人造石檯面"}]},"curtain":{"name":"窗簾","no":0,"items":[{"location":"","name":"陽台-落地窗簾","qty":2.0,"unit":"窗","price":6000.0,"note":"落地布簾(雙邊開)"},{"location":"","name":"窗簾","qty":4.0,"unit":"窗","price":3800.0,"note":"布簾"},{"location":"","name":"頂加窗簾","qty":3.0,"unit":"窗","price":3000.0,"note":"布簾"},{"location":"","name":"房間紗簾","qty":2.0,"unit":"窗","price":4500.0,"note":"布簾"}]},"paint":{"name":"油漆工程","no":8,"items":[{"location":"全室油漆含跳色","name":"房內天花 / 牆面","qty":1.0,"unit":"式","price":220000.0,"note":"得利 + 跳色"},{"location":"全室油漆含跳色","name":"走廊天花 / 牆面","qty":0,"unit":"","price":0,"note":""},{"location":"全室油漆含跳色","name":"廁所天花","qty":0,"unit":"","price":0,"note":""},{"location":"全室油漆含跳色","name":"AB膠 批土x2-3次 油漆","qty":0,"unit":"","price":0,"note":""},{"location":"戶外陽台防水漆","name":"三陽台 牆面白色防水漆","qty":1.0,"unit":"式","price":0,"note":""},{"location":"1~5樓梯間樓梯","name":"外走道牆面/天花","qty":0.0,"unit":"式","price":15000.0,"note":""}]},"flooring":{"name":"地板工程","no":9,"items":[{"location":"全室","name":"卡扣地板  / 同級品","qty":35.0,"unit":"坪","price":2500.0,"note":"含損料"},{"location":"全室","name":"搬運工","qty":2.0,"unit":"工","price":2000.0,"note":""}]},"metalDoor":{"name":"鋼鋁門窗、玻璃工程","no":10,"items":[{"location":"","name":"三合一通風門","qty":1.0,"unit":"樘","price":16000.0,"note":"5mm白色 W150*H150"},{"location":"","name":"浴室窗戶","qty":1.0,"unit":"樘","price":5200.0,"note":""},{"location":"","name":"房間氣密窗戶","qty":4.0,"unit":"樘","price":15800.0,"note":"W120xH150 5+5膠合玻璃"},{"location":"","name":"落地窗","qty":2.0,"unit":"樘","price":25530.0,"note":"5mm白色 W150*H220(37才)"},{"location":"","name":"房間-硫化銅門(不含電子鎖)","qty":4.0,"unit":"樘","price":13500.0,"note":""},{"location":"","name":"頂加鐵工開門洞&門框補強","qty":1.0,"unit":"式","price":12000.0,"note":""},{"location":"","name":"大門-硫化銅門(不含電子鎖)","qty":0.0,"unit":"樘","price":22000.0,"note":"造型"},{"location":"","name":"大門電子鎖","qty":1.0,"unit":"個","price":8500.0,"note":""},{"location":"","name":"頂樓公區大門","qty":1.0,"unit":"樘","price":12000.0,"note":"(頂樓公區大門油漆施作)金額改為浴室隔間牆"},{"location":"","name":"電子鎖含安裝","qty":4.0,"unit":"個","price":3000.0,"note":""},{"location":"","name":"浴室門把鎖","qty":4.0,"unit":"個","price":550.0,"note":""},{"location":"","name":"浴室門-塑鋼門","qty":4.0,"unit":"樘","price":4500.0,"note":""}]},"glass":{"name":"玻璃","no":0,"items":[{"location":"","name":"衛浴乾溼分離(一字型/黑)","qty":4.0,"unit":"式","price":15500.0,"note":"含安裝(黑色款)"},{"location":"","name":"流理臺牆面烤漆玻璃(可替換為貼磚)","qty":4.0,"unit":"式","price":3250.0,"note":"高60cm"},{"location":"","name":"細鋁框玻璃門/雜誌門","qty":1.0,"unit":"式","price":21000.0,"note":""},{"location":"","name":"細鋁框玻璃聯動門","qty":2.0,"unit":"式","price":51000.0,"note":""},{"location":"","name":"隔間牆內崁玻璃","qty":0.0,"unit":"式","price":4500.0,"note":""}]},"cleaning":{"name":"清潔工程","no":11,"items":[{"location":"","name":"清潔工程","qty":0,"unit":"","price":0,"note":""},{"location":"","name":"粗清潔","qty":37.0,"unit":"坪","price":400.0,"note":""},{"location":"","name":"廢棄物清運 裝潢後垃圾","qty":2.0,"unit":"台","price":12000.0,"note":""},{"location":"","name":"搬運工資","qty":4.0,"unit":"工","price":2000.0,"note":""}]},"waterproof":{"name":"頂樓防水 / 鐵皮修繕","no":12,"items":[{"location":"頂樓","name":"防水工程","qty":0.0,"unit":"式","price":0,"note":"1+3塗"},{"location":"頂樓","name":"素地整理/切割水條","qty":0.0,"unit":"","price":0,"note":"高壓沖洗 / 素地整理"},{"location":"頂樓","name":"防水保固","qty":0,"unit":"式","price":0.0,"note":""},{"location":"鐵皮修繕","name":"上方鐵皮覆蓋","qty":0.0,"unit":"式","price":0,"note":""}]},"ac":{"name":"冷氣工程","no":13,"items":[{"location":"B房","name":"28/ 定頻冷專","qty":8.0,"unit":"台","price":19000.0,"note":""},{"location":"B房","name":"36/ 定頻冷專","qty":1.0,"unit":"台","price":21000.0,"note":""},{"location":"B房","name":"銅管加長","qty":15.0,"unit":"米","price":500.0,"note":""},{"location":"ABC房","name":"洗孔","qty":9.0,"unit":"孔","price":1200.0,"note":""},{"location":"ABC房","name":"安裝架","qty":9.0,"unit":"個","price":1500.0,"note":""}]}};
@@ -285,7 +313,7 @@ function blankQuote() {
     cats[cid] = { name: SEED[cid].name, no: SEED[cid].no, items: SEED[cid].items.map(it => ({...it})) };
   });
   return { id: genId(), client:'', phone:'', address:'', projectName:'', quoteDate: todayISO(),
-           designFeePct: 8, pay1Pct: 45, pay2Pct: 45, pay3Pct: 10, cats };
+           designFeePct: 8, taxPct: 5, pay1Pct: 45, pay2Pct: 45, pay3Pct: 10, cats };
 }
 function cloneQuote(src) {
   const copy = JSON.parse(JSON.stringify(src));
@@ -305,7 +333,12 @@ function calcTotals(q) {
   });
   const subtotal = Object.values(catTotals).reduce((a,b)=>a+b,0);
   const designFee = Math.round(subtotal * (Number(q.designFeePct)||0) / 100);
-  return { catTotals, subtotal, designFee, total: subtotal + designFee };
+  const beforeTax = subtotal + designFee;
+  // Backward compat: 舊案沒有 taxPct 屬性時視為 0
+  const taxPct = q.taxPct === undefined ? 0 : Number(q.taxPct) || 0;
+  const tax = Math.round(beforeTax * taxPct / 100);
+  const total = beforeTax + tax;
+  return { catTotals, subtotal, designFee, beforeTax, tax, total };
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -318,6 +351,18 @@ function navigate(path) { location.hash = '#/' + path; }
 
 window.addEventListener('hashchange', render);
 window.addEventListener('DOMContentLoaded', async () => {
+  // theme
+  const savedTheme = localStorage.getItem('ysyy_theme') || 'paper';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.querySelectorAll('#theme-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.t === savedTheme);
+    b.onclick = () => {
+      document.documentElement.setAttribute('data-theme', b.dataset.t);
+      localStorage.setItem('ysyy_theme', b.dataset.t);
+      document.querySelectorAll('#theme-switch button').forEach(x => x.classList.toggle('active', x === b));
+    };
+  });
+
   bindNav();
   const { route } = parseHash();
   if (!Config.apiUrl) {
@@ -571,7 +616,11 @@ function renderDoc(app, q, opts) {
           <span class="label" data-pct="${q.designFeePct}">圖面設計 + 現場監工 <input class="design-input" type="number" min="0" max="30" step="0.5" data-f="designFeePct" value="${q.designFeePct}">%</span>
           <span class="val num">NT$ <span id="dfee">${fmt(t.designFee)}</span></span>
         </div>
-        <div class="sum-row total"><span class="label">設計總價</span><span class="val num">NT$ <span id="ttl">${fmt(t.total)}</span></span></div>
+        <div class="sum-row tax">
+          <span class="label" data-pct="${q.taxPct || 0}">營業稅 <input class="design-input" type="number" min="0" max="20" step="0.5" data-f="taxPct" value="${q.taxPct === undefined ? 5 : q.taxPct}">%</span>
+          <span class="val num">NT$ <span id="tax">${fmt(t.tax)}</span></span>
+        </div>
+        <div class="sum-row total"><span class="label">含稅總價</span><span class="val num">NT$ <span id="ttl">${fmt(t.total)}</span></span></div>
 
         <div class="payment-block">
           <h4>付款條件</h4>
@@ -699,6 +748,8 @@ function attachEditHandlers(q) {
     });
     document.getElementById('sub').textContent = fmt(t.subtotal);
     document.getElementById('dfee').textContent = fmt(t.designFee);
+    const taxEl = document.getElementById('tax');
+    if (taxEl) taxEl.textContent = fmt(t.tax);
     document.getElementById('ttl').textContent = fmt(t.total);
     const pay1 = Math.round(t.total * q.pay1Pct / 100);
     const pay2 = Math.round(t.total * q.pay2Pct / 100);
@@ -710,6 +761,8 @@ function attachEditHandlers(q) {
     // update the data-pct attribute for client view rendering
     const designLabel = document.querySelector('.sum-row.design .label');
     if (designLabel) designLabel.setAttribute('data-pct', q.designFeePct);
+    const taxLabel = document.querySelector('.sum-row.tax .label');
+    if (taxLabel) taxLabel.setAttribute('data-pct', q.taxPct === undefined ? 0 : q.taxPct);
   };
 
   document.querySelectorAll('.meta-field input,.design-input').forEach(inp => {
